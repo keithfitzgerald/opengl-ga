@@ -1,0 +1,6 @@
+GA image creation with OpenGL
+
+build deps:
+  opengl headers
+  libjpeg-dev
+  libglfw-dev
