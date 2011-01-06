@@ -1,12 +1,17 @@
-#ifndef __BITMAP_H__
-#define __BITMAP_H__
+#ifndef __PIXBUF_H__
+#define __PIXBUF_H__
 
-#include "polygon.h"
+#define R_WIDTH 400
+#define R_HEIGHT 300
 
-typedef struct bitmap {
-	int height;
-	int width;
-	pixel data[500][500];
-} bitmap;
+typedef struct pixel {
+	float r;
+	float g;
+	float b;
+} pixel;
 
-#endif
+typedef struct pixbuf {
+	pixel data[R_WIDTH][R_HEIGHT];
+} pixbuf;
+
+#endif /* __PIXBUF_H__ */

@@ -1,17 +1,11 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#include "bitmap.h"
+#include "pixbuf.h"
 
-#define R_HEIGHT 640
-#define R_WIDTH 480
+#define R_WIDTH 400
+#define R_HEIGHT 300
 
-float getRandomPointX();
-float getRandomPointY();
-float getRandomColor();
+void read_jpeg(char *filename, pixbuf *buffer);
 
-int readJPEG(char *filename, bitmap *result);
-polygon* gen_random_image();
-void free_image(polygon *image);
-
-#endif
+#endif /* __UTIL_H__ */

@@ -1,20 +1,10 @@
-#ifndef __POLYGON_H__
-#define __POLYGON_H__
+#ifndef __DISPLAY_H__
+#define __DISPLAY_H__
+
+#include "pixbuf.h"
 
 #define MAX_POLYGONS 10
 #define MAX_VERTICES 10
-
-#define C_RED 0
-#define C_GREEN 1
-#define C_BLUE 2
-#define C_ALPHA 3
-
-typedef struct pixel {
-	float r;
-	float g;
-	float b;
-	float alpha;
-} pixel;
 
 typedef struct vertex {
 	float x;
@@ -24,10 +14,18 @@ typedef struct vertex {
 typedef struct polygon {
 	int num_vertices;
 	vertex vertices[MAX_VERTICES];
-	pixel color;
+	float color[4];
 } polygon;
 
-void set_color(polygon *p, float r, float g, float b, float alpha);
-void add_vertex(polygon *p, float x, float y);
+typedef struct vectimg {
+    polygon polygons[MAX_POLYGONS];
+} vectimg;
 
-#endif
+void render_vectimg(vectimg *v);
+vectimg *gen_random_vectimg();
+void rasterize_vectimg(vectimg *v, pixbuf *buffer);
+float calc_fitness(pixbuf *src, pixbuf *ref);
+void display_jpeg(char *filename);
+void read_pixel_buffer(pixbuf *buffer);
+
+#endif /* __DISPLAY_H__ */

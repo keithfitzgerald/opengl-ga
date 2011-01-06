@@ -4,3 +4,6 @@ build deps:
   opengl headers
   libjpeg-dev
   libglfw-dev
+
+for virtualbox:
+  LIBGL_ALWAYS_INDIRECT=1

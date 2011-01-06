@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall
 CCLINK=-lGL -ljpeg -lglfw
-SOURCES=bitmap.c polygon.c util.c render.c
+SOURCES=pixbuf.c display.c util.c generate.c population.c
 OUTPUT = opengl-ga
 
 all: $(OUTPUT)
