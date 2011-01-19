@@ -2,11 +2,10 @@
 #include <stdio.h>
 #include <math.h>
 #include "GL/glfw.h"
-#include "pixbuf.h"
 #include "display.h"
 #include "util.h"
 
-void set_color(polygon *p, float r, float g, float b, float alpha) {
+void set_color(polygon *p, byte r, byte g, byte b, byte alpha) {
 	if (p == NULL) return;
 
 	p->color[0] = r;
@@ -15,9 +14,9 @@ void set_color(polygon *p, float r, float g, float b, float alpha) {
 	p->color[3] = alpha;
 }
 
-void add_vertex(polygon *p, float x, float y) {
+void add_vertex(polygon *p, int x, int y) {
 	int idx = p->num_vertices;
-	if ((idx + 1) >= MAX_VERTICES) {
+	if ((idx + 1) > MAX_VERTICES) {
 		return;
 	}
 
@@ -26,109 +25,116 @@ void add_vertex(polygon *p, float x, float y) {
 	p->num_vertices++;
 }
 
-float random_width() {
-	return (float)(rand() % R_WIDTH);
+int random_width() {
+	return rand() % R_WIDTH;
 }
 
-float random_height() {
-	return (float)(rand() % R_HEIGHT);
+int random_height() {
+	return rand() % R_HEIGHT;
 }
 
-float random_color() {
-	return (float)(rand()/(RAND_MAX * 1.0)); 
+int random_vertices() {
+    return (rand() % (MAX_VERTICES - MIN_VERTICES)) + MIN_VERTICES; 
+}
+
+int random_polygons() {
+    // TODO: this can return zero
+    return (rand() + MAX_POLYGONS) % MAX_POLYGONS;
+}
+
+int random_color() {
+	return (GLint)(rand() % 255); 
+}
+
+void gen_random_polygon(polygon *p) {
+		p->num_vertices = 0;
+		set_color(p,random_color(),random_color(),random_color(),random_color() /* alpha */);
+
+        int num_vertices = random_vertices();
+		for (int j = 0; j < num_vertices;j++) {
+			add_vertex(p,random_width(),random_height());
+		}
 }
 
 vectimg *gen_random_vectimg() {
-	int i,j;
 	vectimg *v = (vectimg*)malloc(sizeof(vectimg)); 
-	for (i = 0; i < MAX_POLYGONS;i++) {
+    int sz = MIN_POLYGONS;
+    v->num_polygons = sz;
+	for (int i = 0; i < sz;i++) {
 		polygon *p = &v->polygons[i];
-		p->num_vertices = 0;
-
-		set_color(p,random_color(),random_color(),random_color(),random_color() /* alpha */);
-
-        // TODO: only triangles for now?
-		for (j = 0; j < 3;j++) {
-			add_vertex(p,random_width(),random_height());
-		}
+        gen_random_polygon(p);
 	}
 
 	return v;
 }
 
 void render_vectimg(vectimg *v) {
-    int i,j;
-    for (i = 0; i < MAX_POLYGONS;i++) {
+    for (int i = 0; i < v->num_polygons;i++) {
         polygon p = v->polygons[i];
 
         glBegin(GL_POLYGON);
-        glColor4f(p.color[0], p.color[1], p.color[2], p.color[3]);
+        // TODO: why doesn't this work?
+        //glColor4iv(p.color);
+        
+        glColor3ub(p.color[0],p.color[1],p.color[2]);
 
-        for (j = 0;j < p.num_vertices;j++) {
+        for (int j = 0;j < p.num_vertices;j++) {
             vertex v = p.vertices[j];
-            glVertex2f(v.x, v.y);
+            glVertex2i(v.x, v.y);
         }
 
         glEnd();
     }
 }
 
-void read_pixel_buffer(pixbuf *buffer) {
-    int i,j,idx;
-
-    GLfloat *pixbuf = (GLfloat*)malloc(sizeof(GLfloat) * 3 * R_HEIGHT * R_WIDTH);
-    glReadPixels(0, 0, R_WIDTH, R_HEIGHT, GL_RGB, GL_FLOAT, pixbuf);
-    
-    for (i = 0;i < R_HEIGHT;i++) {
-        for (j = 0;j < R_WIDTH;j += 3) {
-            idx = (i * R_WIDTH) + j;
-            buffer->data[i][j].r = pixbuf[idx];
-            buffer->data[i][j].g = pixbuf[idx + 1];
-            buffer->data[i][j].b = pixbuf[idx + 2];
-        }
-    }
-
-    free(pixbuf);
+void read_pixels(byte *buffer) {
+    glReadPixels(0, 0, R_WIDTH, R_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 }
 
-void rasterize_vectimg(vectimg *v, pixbuf *buffer) {
+void rasterize_vectimg(vectimg *v, byte *buffer) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     render_vectimg(v);
-    read_pixel_buffer(buffer);
+    read_pixels(buffer);
 }
 
 // TODO: wrong place for this?
-float calc_fitness(pixbuf *src, pixbuf *ref) {
-	int x,y;
-	double diff = 0;
-	for (y = 0;y < R_HEIGHT;y++) {
-		for (x = 0;x < R_WIDTH;x++) {
-			diff += fabs(src->data[x][y].r - ref->data[x][y].r);
-			diff += fabs(src->data[x][y].g - ref->data[x][y].g);
-			diff += fabs(src->data[x][y].b - ref->data[x][y].b);
+long calc_fitness(byte *src, byte *ref) {
+
+    int r,g,b;
+    int stride = (R_WIDTH * 3);
+    long diff = 0;
+    for (int y = 0;y < R_HEIGHT;y++) {
+        for (int x = 0;x < stride;x += 3) {
+            int i = (y * stride) + x;
+              r = src[i] - ref[i];
+			  g = src[i+1] - ref[i+1];
+			  b = src[i+2] - ref[i+2];
+
+              diff += abs(r) + abs(g) + abs(b);
 		}
 	}
-	return (float)diff;
+	return diff;
 }
 
-void display_pixbuf(pixbuf *buffer) {
-    int x,y;
-    pixel *pixel;
-    for (y = R_HEIGHT - 1; y >= 0;y--) {
-        for (x = R_WIDTH - 1;x >=0 ;x--) {
+void display_pixbuf(byte *buffer, unsigned char inverted) {
+    int base = inverted ? R_HEIGHT - 1 : 0;
+    int stride = R_WIDTH * 3;    
+    for (int y = 0;y < R_HEIGHT;y++) {
+      for (int x = 0;x < stride;x += 3) {
+            int i = ((base - y) * stride) + x;
+            //printf("out pixel [%d,%d]: R=%d,G=%d,B=%d\n",x/3,y,buffer[i],buffer[i+1],buffer[i+2]);
+            //fflush(stdout);
             glBegin(GL_POINTS);
-            pixel = &buffer->data[x][y];
-            glColor3f(pixel->r, pixel->g, pixel->b);
-            glVertex2f((float)x, (float)(R_HEIGHT - y));
+            glColor3ub(buffer[i],buffer[i+1], buffer[i+2]);
+            glVertex2i(x/3,y);
             glEnd();
-        }
+          }
     }
 }
 
 void display_jpeg(char *filename) {
-    pixbuf *buffer = (pixbuf*)malloc(sizeof(pixbuf));
-    read_jpeg(filename, buffer);
-    display_pixbuf(buffer);
+    byte *buffer = ga_read_jpeg(filename);
+    display_pixbuf(buffer,1);
     free(buffer);
 }

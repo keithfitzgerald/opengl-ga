@@ -1,31 +1,49 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
-#include "pixbuf.h"
+#include "GL/glfw.h"
 
-#define MAX_POLYGONS 10
+#define MIN_POLYGONS 1
+#define MAX_POLYGONS 255
+
+#define MIN_VERTICES 3
 #define MAX_VERTICES 10
 
+#define R_WIDTH 414
+#define R_HEIGHT 398
+
+typedef unsigned char byte;
+
 typedef struct vertex {
-	float x;
-	float y;
+	int x;
+	int y;
 } vertex;
 
 typedef struct polygon {
 	int num_vertices;
 	vertex vertices[MAX_VERTICES];
-	float color[4];
+	byte color[4];
 } polygon;
 
 typedef struct vectimg {
+    int modified;
+    int num_polygons;
     polygon polygons[MAX_POLYGONS];
 } vectimg;
 
 void render_vectimg(vectimg *v);
 vectimg *gen_random_vectimg();
-void rasterize_vectimg(vectimg *v, pixbuf *buffer);
-float calc_fitness(pixbuf *src, pixbuf *ref);
+void gen_random_polygon(polygon *p);
+void rasterize_vectimg(vectimg *v, byte *buffer);
+long calc_fitness(byte *src, byte *ref);
 void display_jpeg(char *filename);
-void read_pixel_buffer(pixbuf *buffer);
+void read_pixels(byte *buffer);
+void add_vertex(polygon *p, int x, int y);
+void display_pixbuf(byte *buffer, unsigned char inverted);
+
+int random_width();
+int random_height();
+int random_color();
+
 
 #endif /* __DISPLAY_H__ */

@@ -1,9 +1,10 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <jpeglib.h>
 #include "util.h"
-#include "pixbuf.h"
+#include "display.h"
 
-void read_jpeg(char *filename, pixbuf *buffer) {
+byte *ga_read_jpeg(char *filename) {
 
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -14,7 +15,7 @@ void read_jpeg(char *filename, pixbuf *buffer) {
 
   if ((infile = fopen(filename, "rb")) == NULL) {
     fprintf(stderr, "can't open %s\n", filename);
-    return;
+    return NULL;
   }
 
   cinfo.err = jpeg_std_error(&jerr);
@@ -28,16 +29,22 @@ void read_jpeg(char *filename, pixbuf *buffer) {
   output = (*cinfo.mem->alloc_sarray)
 		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-  //rgbImage->height = cinfo.output_height;
-  //rgbImage->width = cinfo.output_width;
+  //R_HEIGHT = cinfo.output_height;
+  //R_WIDTH = cinfo.output_width;
+
+  printf("width = %d, height = %d\n",cinfo.output_width,cinfo.output_height);
+ 
+  int bufsz = sizeof(byte) * 3 * R_HEIGHT * R_WIDTH;
+  byte *buffer = (byte*)malloc(bufsz);
 
   row = 0;
   while (cinfo.output_scanline < cinfo.output_height) {
-    (void) jpeg_read_scanlines(&cinfo, output, 1);
+    jpeg_read_scanlines(&cinfo, output, 1);
 	for (i = 0;i < row_stride;i += 3) {
-		buffer->data[i/3][row].r = (float)(output[0][i] / 256.0);
-		buffer->data[i/3][row].g = (float)(output[0][i+1] / 256.0);
-		buffer->data[i/3][row].b = (float)(output[0][i+2] / 256.0);
+        int idx = (row * row_stride) + i;
+		buffer[idx] = output[0][i];
+		buffer[idx+1] = output[0][i+1];
+		buffer[idx+2] = output[0][i+2];
 	}
 	row++;
   }
@@ -45,4 +52,8 @@ void read_jpeg(char *filename, pixbuf *buffer) {
   (void) jpeg_finish_decompress(&cinfo);
   jpeg_destroy_decompress(&cinfo);
   fclose(infile);
+
+  printf("read %d bytes\n",bufsz);
+  
+  return buffer;
 }

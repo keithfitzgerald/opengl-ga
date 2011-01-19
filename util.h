@@ -1,11 +1,8 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#include "pixbuf.h"
+#include "display.h"
 
-#define R_WIDTH 400
-#define R_HEIGHT 300
-
-void read_jpeg(char *filename, pixbuf *buffer);
+byte *ga_read_jpeg(char *filename);
 
 #endif /* __UTIL_H__ */

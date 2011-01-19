@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -std=c99
 CCLINK=-lGL -ljpeg -lglfw
-SOURCES=pixbuf.c display.c util.c generate.c population.c
+SOURCES=display.c util.c generate.c population.c
 OUTPUT = opengl-ga
 
 all: $(OUTPUT)

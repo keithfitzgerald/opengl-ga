@@ -1,4 +1,7 @@
-GA image creation with OpenGL
+GA image creation with OpenGL in C
+
+This code is based off of Roger Alsing's EvoList project:
+http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa/
 
 build deps:
   opengl headers
