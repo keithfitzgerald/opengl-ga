@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -std=c99
+CFLAGS=-Wall -std=c99 -msse2
 CCLINK=-lGL -ljpeg -lglfw
 SOURCES=display.c util.c generate.c population.c
 OUTPUT = opengl-ga

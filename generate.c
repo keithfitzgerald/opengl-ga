@@ -5,6 +5,7 @@
 #include "display.h"
 #include "population.h"
 #include "util.h"
+#include <xmmintrin.h>
 
 void setup_display() {
     int vPort[4];
@@ -65,18 +66,21 @@ int main(int argc, char **argv) {
 
     display_jpeg("firefox.jpg");
    
-    byte *ref = (byte*)malloc(sizeof(byte) * 3 * 500 * 500);
+    byte *ref = _mm_malloc(sizeof(byte) * R_BUFSZ,16);
     read_pixels(ref);
   
     long prev_fitness = -1;
     int selected = 0;
     vectimg *v = gen_random_vectimg();
  
-    byte *buffer = (byte*)malloc(sizeof(byte) * 3 * (R_HEIGHT+1) * R_WIDTH);
-    
+    byte *buffer = _mm_malloc(sizeof(byte) * R_BUFSZ,16);
+ 
     int i = 0, iters = 0;
     while(1) {
        iters++;
+       if (iters % 2500 == 0) { 
+         printf("generation: %d selected: %d fitness: %ld polygons: %d iters: %d\n",i,selected,prev_fitness,v->num_polygons,iters); 
+       }
        vectimg *c = clone_vectimg(v); 
        change_image(c);
        
@@ -100,19 +104,13 @@ int main(int argc, char **argv) {
           free(c);
        }
 
-       printf("generation: %d selected: %d fitness: %ld polygons: %d iters: %d\r",i,selected,prev_fitness,v->num_polygons,iters);
-       glfwPollEvents();
- 
-       if (glfwGetKey(GLFW_KEY_ESC) == GLFW_PRESS) {
-          break;
-       }
        i++;
     }    
     printf("\n");
  
     free(v);
-    free(buffer);
-    free(ref);
+    _mm_free(buffer);
+    _mm_free(ref);
     glfwTerminate();
 
     exit(EXIT_SUCCESS);
