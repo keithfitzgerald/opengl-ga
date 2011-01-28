@@ -4,6 +4,8 @@
 #include "GL/glfw.h"
 #include "display.h"
 #include "util.h"
+#include <xmmintrin.h>
+#include <stdint.h>
 
 void set_color(polygon *p, byte r, byte g, byte b, byte alpha) {
 	if (p == NULL) return;
@@ -76,7 +78,7 @@ void render_vectimg(vectimg *v) {
         // TODO: why doesn't this work?
         //glColor4iv(p.color);
         
-        glColor3ub(p.color[0],p.color[1],p.color[2]);
+        glColor4ub(p.color[0],p.color[1],p.color[2],p.color[3]);
 
         for (int j = 0;j < p.num_vertices;j++) {
             vertex v = p.vertices[j];
@@ -101,18 +103,18 @@ void rasterize_vectimg(vectimg *v, byte *buffer) {
 // TODO: wrong place for this?
 long calc_fitness(byte *src, byte *ref) {
 
-    int r,g,b;
-    int stride = (R_WIDTH * 3);
     long diff = 0;
-    for (int y = 0;y < R_HEIGHT;y++) {
-        for (int x = 0;x < stride;x += 3) {
-            int i = (y * stride) + x;
-              r = src[i] - ref[i];
-			  g = src[i+1] - ref[i+1];
-			  b = src[i+2] - ref[i+2];
+    int sz = R_BUFSZ;
+    
+    uint16_t xc[8] __attribute__((aligned(16))) = {0,0,0,0,0,0,0,0};
 
-              diff += abs(r) + abs(g) + abs(b);
-		}
+    for (int i = 0;i < sz;i += 16) {
+        __m128i a = _mm_load_si128((__m128i*)(src + i));
+        __m128i b = _mm_load_si128((__m128i*)(ref + i));
+        __m128i c = _mm_sad_epu8(a,b);
+        _mm_store_si128((__m128i*)&xc, c);
+        diff += xc[0] + xc[4];
+      //diff += abs(src[i] - ref[i]);
 	}
 	return diff;
 }

@@ -11,6 +11,7 @@
 
 #define R_WIDTH 414
 #define R_HEIGHT 398
+#define R_BUFSZ 495558  // 16 bit aligned buffer
 
 typedef unsigned char byte;
 

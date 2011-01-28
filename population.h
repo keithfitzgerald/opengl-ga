@@ -3,7 +3,7 @@
 
 #include "display.h"
 
-#define ADD_POLYGON_RATE 350 
+#define ADD_POLYGON_RATE 350
 #define REMOVE_POLYGON_RATE 750
 #define MOVE_POLYGON_RATE 350
 
