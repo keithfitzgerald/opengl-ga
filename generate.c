@@ -1,67 +1,18 @@
+#ifdef __OPENGL__ 
+#include "GL/glfw.h"
+#include "opengl/display.h"
+#elif __OPENGL_ES__
+#include "GLes/glfw.h"
+#include "opengl-es/display.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include "GL/glfw.h"
-#include "display.h"
-#include "population.h"
 #include "util.h"
 #include <xmmintrin.h>
 
-void setup_display() {
-    int vPort[4];
-
-    if(!glfwInit()) {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        exit(EXIT_FAILURE);
-    }
-
-    if(!glfwOpenWindow(R_WIDTH,R_HEIGHT, 0, 0, 0, 0, 0, 0, GLFW_WINDOW)) {
-        fprintf( stderr, "Failed to open GLFW window\n" );
-        glfwTerminate();
-        exit(EXIT_FAILURE);
-    }
-
-    glfwSetWindowTitle("OpenGL");
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_LINE_SMOOTH);
-    glDisable(GL_DEPTH_TEST);
-
-    glGetIntegerv(GL_VIEWPORT, vPort);
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glOrtho(0, vPort[2], 0, vPort[3], -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-}
-
-void print_vectimg(char *name, vectimg *v) {
-   printf("vectimg[%s]: %d polygons\n",name,v->num_polygons);
-   int sz = v->num_polygons; 
-   for (int i = 0; i < sz;i++) {
-       printf("    polygon[%d]: %d vertices\n",i,v->polygons[i].num_vertices);
-   }
-}
-
-vectimg *clone_vectimg(vectimg *v) {
-    vectimg *c = (vectimg*)malloc(sizeof(vectimg));
-    int sz = v->num_polygons; 
-    for (int i = 0; i < sz;i++) {
-        c->polygons[i] = v->polygons[i];
-    }
-    c->num_polygons = v->num_polygons;
-    c->modified = 0;
-
-    return c;
-}
-
 int main(int argc, char **argv) {
  
-    srand((unsigned int)time(0));
     setup_display();
 
     display_jpeg("firefox.jpg");
