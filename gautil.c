@@ -1,59 +1,71 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <jpeglib.h>
-#include "util.h"
-#include "display.h"
+#include <time.h>
+#include <xmmintrin.h>
 
-byte *ga_read_jpeg(char *filename) {
+srand((unsigned int) time(0));
 
-  struct jpeg_decompress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-  int i, row;
-  FILE * infile;		/* source file */
-  JSAMPARRAY output;    /* Output row buffer */
-  int row_stride;		/* physical row width in output buffer */
+int random_width(int width) {
+    return ga_rand() % width;
+}
 
-  if ((infile = fopen(filename, "rb")) == NULL) {
-    fprintf(stderr, "can't open %s\n", filename);
-    return NULL;
-  }
+int random_height(int height) {
+    return ga_rand() % height;
+}
 
-  cinfo.err = jpeg_std_error(&jerr);
-  jpeg_create_decompress(&cinfo);
-  jpeg_stdio_src(&cinfo, infile);
+int random_vertices() {
+    return (ga_rand() % (MAX_VERTICES - MIN_VERTICES)) +MIN_VERTICES;
+}
 
-  (void) jpeg_read_header(&cinfo, TRUE);
-  (void) jpeg_start_decompress(&cinfo);
+int random_polygons() {
+    // TODO: this can return zero
+    return (ga_rand() + MAX_POLYGONS) % MAX_POLYGONS;
+}
 
-  row_stride = cinfo.output_width * cinfo.output_components;
-  output = (*cinfo.mem->alloc_sarray)
-		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
+int random_color() {
+    return ga_rand() % 255;
+}
 
-  //R_HEIGHT = cinfo.output_height;
-  //R_WIDTH = cinfo.output_width;
+int ga_rand() {
+    return rand();
+}
 
-  printf("width = %d, height = %d\n",cinfo.output_width,cinfo.output_height);
- 
-  int bufsz = sizeof(byte) * 3 * R_HEIGHT * R_WIDTH;
-  byte *buffer = (byte*)malloc(bufsz);
+int ga_max(int a, int b) {
+    return ((a)>(b) ? (a) : (b));
+}
 
-  row = 0;
-  while (cinfo.output_scanline < cinfo.output_height) {
-    jpeg_read_scanlines(&cinfo, output, 1);
-	for (i = 0;i < row_stride;i += 3) {
-        int idx = (row * row_stride) + i;
-		buffer[idx] = output[0][i];
-		buffer[idx+1] = output[0][i+1];
-		buffer[idx+2] = output[0][i+2];
-	}
-	row++;
-  }
+int ga_min(int a, int b) {
+    return ((a)>(b) ? (b) : (a));
+}
 
-  (void) jpeg_finish_decompress(&cinfo);
-  jpeg_destroy_decompress(&cinfo);
-  fclose(infile);
+int ga_rand_range(int min, int max) {
+    return (ga_rand() % (max - min)) +min;
+}
 
-  printf("read %d bytes\n",bufsz);
-  
-  return buffer;
+void ga_read_ref_img(char *imgname, ga_context* context) {
+
+}
+
+long calc_fitness(byte *src, byte *ref) {
+
+    long diff = 0;
+    int sz = R_BUFSZ;
+
+    // TODO: not going to compile on msvc
+    uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    for (int i = 0; i < sz; i += 16) {
+        __m128i a = _mm_load_si128((__m128i*) (src + i));
+        __m128i b = _mm_load_si128((__m128i*) (ref + i));
+        __m128i c = _mm_sad_epu8(a, b);
+        _mm_store_si128((__m128i*) & xc, c);
+        diff += xc[0] + xc[4];
+    }
+    return diff;
+}
+
+void print_vectimg(char *name, vectimg *v) {
+    printf("vectimg[%s]: %d polygons\n", name, v->num_polygons);
+    int sz = v->num_polygons;
+    for (int i = 0; i < sz; i++) {
+        printf("    polygon[%d]: %d vertices\n", i, v->polygons[i].num_vertices);
+    }
 }
