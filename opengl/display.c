@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include "GL/glfw.h"
 #include "display.h"
-#include "gautil.h"
-#include "jpeg.h"
+#include "../gautil.h"
+#include "../jpeg.h"
 
 void setup_display(int width, int height) {
     int vPort[4];
@@ -57,15 +57,33 @@ void render_vectimg(vectimg *v) {
 }
 
 void read_pixels(byte *buffer, int width, int height) {
-    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    glReadPixels(0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 }
 
 void rasterize_vectimg(vectimg *v, byte *buffer) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     render_vectimg(v);
-    read_pixels(buffer);
+    read_pixels(buffer, v->width, v->height);
 }
+
+/*
+void display_rgb_pixbuf(byte *buffer, int width, int height, unsigned char inverted) {
+    int stride = width * 3;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < stride; x += 3) {
+            int i = (y * stride) + x;
+            printf("out pixel [%d,%d]: R=%d,G=%d,B=%d\n",x/3,y,buffer[i],buffer[i+1],buffer[i+2]);
+            fflush(stdout);
+            glBegin(GL_POINTS);
+            glColor3ub(buffer[i], buffer[i + 1], buffer[i + 2]);
+            glVertex2i(x / 3, y);
+            glEnd();
+        }
+    }
+}
+*/
+
 
 void display_rgb_pixbuf(byte *buffer, int width, int height, unsigned char inverted) {
     int base = inverted ? height - 1 : 0;
@@ -83,8 +101,3 @@ void display_rgb_pixbuf(byte *buffer, int width, int height, unsigned char inver
     }
 }
 
-void display_jpeg(char *filename) {
-    ga_jpeg *jpeg = ga_read_jpeg(filename);
-    display_rgb_pixbuf(jpeg->buffer, jpeg->width, jpeg->height, 1);
-    ga_free_jpeg(jpeg);
-}

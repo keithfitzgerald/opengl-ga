@@ -1,10 +1,43 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include "gautil.h"
 #include "vectimg.h"
+
+void add_vertex(polygon *p, int x, int y) {
+    int idx = p->num_vertices;
+    if ((idx + 1) > MAX_VERTICES) {
+        return;
+    }
+
+    p->vertices[idx].x = x;
+    p->vertices[idx].y = y;
+    p->num_vertices++;
+}
+
+void set_color(polygon *p, byte r, byte g, byte b, byte alpha) {
+    if (!p) return;
+
+    p->color[0] = r;
+    p->color[1] = g;
+    p->color[2] = b;
+    p->color[3] = alpha;
+}
+
+void gen_random_polygon(polygon *p, int width, int height) {
+    p->num_vertices = 0;
+    set_color(p, random_color(), random_color(),
+            random_color(), random_color() /* alpha */);
+
+    int num_vertices = random_vertices();
+    for (int j = 0; j < num_vertices; j++) {
+        add_vertex(p, random_width(width), random_height(height));
+    }
+}
 
 void add_polygon(vectimg *v) {
     int np = v->num_polygons;
     if (np < MAX_POLYGONS) {
-        gen_random_polygon(&v->polygons[np]);
+        gen_random_polygon(&v->polygons[np],v->width,v->height);
         v->num_polygons++;
     }
 }
@@ -13,7 +46,7 @@ void remove_polygon(vectimg *v) {
     int i;
     int np = v->num_polygons;
     // TODO: distribution correct?
-    int ridx = random() % np;
+    int ridx = ga_rand() % np;
 
     if ((np - 1) > MIN_POLYGONS) {
         for (i = ridx; i < np; i++) {
@@ -28,9 +61,9 @@ void move_polygon(vectimg *v) {
     add_polygon(v);
 }
 
-void add_new_vertex(polygon *p) {
+void add_new_vertex(polygon *p, int width, int height) {
     if (p->num_vertices < MAX_VERTICES) {
-        add_vertex(p, random_width(), random_height());
+        add_vertex(p, random_width(width), random_height(height));
     }
 }
 
@@ -38,7 +71,7 @@ void remove_vertex(polygon *p) {
     int i;
     int nv = p->num_vertices;
     // TODO: distribution correct?
-    int ridx = rand() % nv;
+    int ridx = ga_rand() % nv;
 
     if ((nv - 1) > MIN_VERTICES) {
         for (i = ridx; i < nv; i++) {
@@ -48,45 +81,17 @@ void remove_vertex(polygon *p) {
     }
 }
 
-void set_color(polygon *p, byte r, byte g, byte b, byte alpha) {
-    if (!p) return;
-
-    p->color[0] = r;
-    p->color[1] = g;
-    p->color[2] = b;
-    p->color[3] = alpha;
-}
-
-void add_vertex(polygon *p, int x, int y) {
-    int idx = p->num_vertices;
-    if ((idx + 1) > MAX_VERTICES) {
-        return;
-    }
-
-    p->vertices[idx].x = x;
-    p->vertices[idx].y = y;
-    p->num_vertices++;
-}
-
-void gen_random_polygon(polygon *p) {
-    p->num_vertices = 0;
-    set_color(p, random_color(), random_color(),
-            random_color(), random_color() /* alpha */);
-
-    int num_vertices = random_vertices();
-    for (int j = 0; j < num_vertices; j++) {
-        add_vertex(p, random_width(), random_height());
-    }
-}
-
-vectimg *gen_random_vectimg() {
+vectimg *gen_random_vectimg(int num_polygons, int width, int height) {
     vectimg *v = (vectimg*) malloc(sizeof (vectimg));
-    int sz = MIN_POLYGONS;
-    v->num_polygons = sz;
-    for (int i = 0; i < sz; i++) {
+    v->num_polygons = num_polygons;
+    for (int i = 0; i < num_polygons; i++) {
         polygon *p = &v->polygons[i];
-        gen_random_polygon(p);
+        gen_random_polygon(p, width, height);
     }
+
+    v->width = width;
+    v->height = height;
+    v->modified = 0;
 
     return v;
 }
@@ -117,7 +122,7 @@ void change_color(vectimg *v, polygon *p) {
 void change_polygon(vectimg *v, polygon *p) {
 
     if ((rand() % ADD_VERTEX_RATE) == 1) {
-        add_new_vertex(p);
+        add_new_vertex(p, v->width, v->height);
         v->modified = 1;
     }
 
@@ -131,8 +136,8 @@ void change_polygon(vectimg *v, polygon *p) {
     int nv = p->num_vertices;
     for (int i = 0; i < nv; i++) {
         if ((rand() % MOVE_VERTEX_MAX) == 1) {
-            p->vertices[i].x = random_width();
-            p->vertices[i].y = random_height();
+            p->vertices[i].x = random_width(v->width);
+            p->vertices[i].y = random_height(v->height);
             v->modified = 1;
         }
 
@@ -183,7 +188,25 @@ vectimg *clone_vectimg(vectimg *v) {
         c->polygons[i] = v->polygons[i];
     }
     c->num_polygons = v->num_polygons;
+    c->width = v->width;
+    c->height = v->height;
     c->modified = 0;
 
     return c;
+}
+
+void print_vectimg(char *name, vectimg *v) {
+    printf("vectimg[%s]: polygons=%d width=%d height=%d modified=%d\n",
+            name, v->num_polygons, v->width, v->height, v->modified);
+    for (int i = 0; i < v->num_polygons; i++) {
+        polygon *p = &v->polygons[i];
+        byte *color = p->color;
+        printf("  polygon[%d]: vertices=%d r=%d g=%d b=%d a=%d\n", i,
+                p->num_vertices, color[0], color[1], color[2], color[3]);
+
+        for (int j = 0; j < p->num_vertices; j++) {
+            vertex *v = &p->vertices[j];
+            printf("    vertex[%d]: x=%d y=%d\n", j, v->x,v->y);
+        }
+    }
 }

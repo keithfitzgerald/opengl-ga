@@ -1,6 +1,8 @@
 #ifndef __GAUTIL_H__
 #define __GAUTIL_H__
 
+#include <stdint.h>
+
 #define byte uint8_t
 
 #define MIN_POLYGONS 1
@@ -41,22 +43,23 @@
 
 */
 
-typedef struct ga_context {
-    byte *ref; // RGBA array of the refrence image
-    byte *cur; // RGBA array of the currrent comparison image
-    int fitness; // fitness (distance) between the two images
-    int width;
-    int height;
-} ga_context;
+//typedef struct ga_context {
+//    byte *ref; // RGBA array of the refrence image
+//    byte *cur; // RGBA array of the currrent comparison image
+//    int fitness; // fitness (distance) between the two images
+//    int width;
+//    int height;
+//} ga_context;
 
-void ga_read_ref_img(char *imgname, ga_context* context);
-long calc_fitness(byte *src, byte *ref);
+//void ga_read_ref_img(char *imgname, ga_context* context);
+long calc_fitness(byte *src, byte *ref, int bufsz);
 
 
-int random_width();
-int random_height();
+int random_width(int width);
+int random_height(int height);
 int random_color();
 int random_vertices();
+int random_polygons();
 int ga_rand();
 int ga_rand_range(int a, int b);
 int ga_max(int a, int b);

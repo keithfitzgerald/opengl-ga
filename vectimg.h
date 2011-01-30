@@ -23,9 +23,11 @@ typedef struct vectimg {
 } vectimg;
 
 void render_vectimg(vectimg *v);
-vectimg *gen_random_vectimg();
-void gen_random_polygon(polygon *p);
+void print_vectimg(char *name, vectimg *v);
+vectimg *gen_random_vectimg(int num_polygons, int width, int height);
 void add_vertex(polygon *p, int x, int y);
+vectimg *clone_vectimg(vectimg *v);
+void change_image(vectimg *v);
 
 #endif	/* __VECTIMG_H__ */
 

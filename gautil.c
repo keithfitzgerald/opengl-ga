@@ -1,7 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <xmmintrin.h>
-
-srand((unsigned int) time(0));
+#include "gautil.h"
+#include "vectimg.h"
 
 int random_width(int width) {
     return ga_rand() % width;
@@ -12,12 +14,11 @@ int random_height(int height) {
 }
 
 int random_vertices() {
-    return (ga_rand() % (MAX_VERTICES - MIN_VERTICES)) +MIN_VERTICES;
+    return ga_rand_range(MIN_VERTICES, MAX_VERTICES);
 }
 
 int random_polygons() {
-    // TODO: this can return zero
-    return (ga_rand() + MAX_POLYGONS) % MAX_POLYGONS;
+    return ga_rand_range(MIN_POLYGONS, MAX_POLYGONS);
 }
 
 int random_color() {
@@ -40,19 +41,18 @@ int ga_rand_range(int min, int max) {
     return (ga_rand() % (max - min)) +min;
 }
 
-void ga_read_ref_img(char *imgname, ga_context* context) {
+//void ga_read_ref_img(char *imgname, ga_context* context) {
+//
+//}
 
-}
-
-long calc_fitness(byte *src, byte *ref) {
+long calc_fitness(byte *src, byte *ref, int bufsz) {
 
     long diff = 0;
-    int sz = R_BUFSZ;
 
     // TODO: not going to compile on msvc
     uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    for (int i = 0; i < sz; i += 16) {
+    for (int i = 0; i < bufsz; i += 16) {
         __m128i a = _mm_load_si128((__m128i*) (src + i));
         __m128i b = _mm_load_si128((__m128i*) (ref + i));
         __m128i c = _mm_sad_epu8(a, b);
@@ -62,10 +62,3 @@ long calc_fitness(byte *src, byte *ref) {
     return diff;
 }
 
-void print_vectimg(char *name, vectimg *v) {
-    printf("vectimg[%s]: %d polygons\n", name, v->num_polygons);
-    int sz = v->num_polygons;
-    for (int i = 0; i < sz; i++) {
-        printf("    polygon[%d]: %d vertices\n", i, v->polygons[i].num_vertices);
-    }
-}

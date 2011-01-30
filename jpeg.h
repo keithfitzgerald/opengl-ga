@@ -4,10 +4,10 @@
 #include "gautil.h"
 
 typedef struct ga_jpeg {
-    byte buffer;
+    byte *buffer;
     int width;
     int height;
-}; 
+} ga_jpeg;
 
 ga_jpeg *ga_read_jpeg(char *filename);
 void ga_free_jpeg(ga_jpeg *jpeg);

@@ -1,10 +1,10 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
+#include "../vectimg.h"
 #include "../gautil.h"
 
-// #define R_BUFSZ 495558  // 16 bit aligned buffer
-
+void setup_display(int width, int height);
 void rasterize_vectimg(vectimg *v, byte *buffer);
 
 void display_jpeg(char *filename);
