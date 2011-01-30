@@ -25,7 +25,7 @@ ga_jpeg *ga_read_jpeg(char *filename) {
   JSAMPARRAY output = (*cinfo.mem->alloc_sarray)
 		((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 
-  ga_jpeg *jpeg = malloc(sizeof(ga_jpeg));
+  ga_jpeg *jpeg = (ga_jpeg*)malloc(sizeof(ga_jpeg));
   
   jpeg->height = cinfo.output_height;
   jpeg->width = cinfo.output_width;
@@ -33,7 +33,7 @@ ga_jpeg *ga_read_jpeg(char *filename) {
   printf("jpeg width = %d, height = %d\n",cinfo.output_width,cinfo.output_height);
  
   int bufsz = sizeof(uint8_t) * 3 * jpeg->height * jpeg->width;
-  jpeg->buffer = malloc(bufsz);
+  jpeg->buffer = (byte*)malloc(bufsz);
 
   int row = 0;
   while (cinfo.output_scanline < cinfo.output_height) {

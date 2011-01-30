@@ -1,13 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <xmmintrin.h>
+#ifdef _MSC_VER
+  #include <emmintrin.h>
+#else
+  #include <xmmintrin.h>
+#endif
 #include "GL/glfw.h"
 #include "opengl/display.h"
 #include "gautil.h"
 #include "jpeg.h"
 #include "vectimg.h"
-#include "unistd.h"
 
 #define BUF_ALIGN_WIDTH 16
 
@@ -32,7 +35,7 @@ int main(int argc, char **argv) {
 
     printf("alignment %d bytes, buffer size: %d\n",BUF_ALIGN_WIDTH, bufsz);
     
-    byte *ref = _mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
+    byte *ref = (byte*)_mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
     read_pixels(ref, width, height);
 
     long prev_fitness = -1;
@@ -40,7 +43,7 @@ int main(int argc, char **argv) {
     vectimg *v = gen_random_vectimg(1,width, height);
     //print_vectimg("v",v);
 
-    byte *buffer = _mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
+    byte *buffer = (byte*)_mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
 
     rasterize_vectimg(v, buffer);
 

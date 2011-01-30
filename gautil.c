@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <xmmintrin.h>
+#ifdef _MSC_VER
+  #include <emmintrin.h>
+#else
+  #include <xmmintrin.h>
+#endif
 #include "gautil.h"
 #include "vectimg.h"
 
@@ -49,8 +53,11 @@ long calc_fitness(byte *src, byte *ref, int bufsz) {
 
     long diff = 0;
 
-    // TODO: not going to compile on msvc
-    uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
+	#ifdef _MSC_VER
+		__declspec(align(16)) uint16_t xc[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+	#else
+		uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
+	#endif
 
     for (int i = 0; i < bufsz; i += 16) {
         __m128i a = _mm_load_si128((__m128i*) (src + i));
