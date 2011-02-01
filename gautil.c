@@ -26,7 +26,11 @@ int random_polygons() {
 }
 
 int random_color() {
-    return ga_rand() % 255;
+    return ga_rand_range(0,255);
+}
+
+int random_alpha() {
+    return ga_rand_range(30,60);
 }
 
 int ga_rand() {
@@ -42,25 +46,26 @@ int ga_min(int a, int b) {
 }
 
 int ga_rand_range(int min, int max) {
+    if (min == max) {
+        return min;
+    }
+
     return (ga_rand() % (max - min)) +min;
 }
-
-//void ga_read_ref_img(char *imgname, ga_context* context) {
-//
-//}
 
 long calc_fitness(byte *src, byte *ref, int bufsz) {
 
     long diff = 0;
 
-	#ifdef _MSC_VER
-		__declspec(align(16)) uint16_t xc[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
-	#else
-		uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
-	#endif
+    #ifdef _MSC_VER
+        __declspec(align(16)) uint16_t xc[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
+    #else
+        uint16_t xc[8] __attribute__((aligned(16))) = {0, 0, 0, 0, 0, 0, 0, 0};
+    #endif
 
     for (int i = 0; i < bufsz; i += 16) {
-        __m128i a = _mm_load_si128((__m128i*) (src + i));
+       
+	    __m128i a = _mm_load_si128((__m128i*) (src + i));
         __m128i b = _mm_load_si128((__m128i*) (ref + i));
         __m128i c = _mm_sad_epu8(a, b);
         _mm_store_si128((__m128i*) & xc, c);

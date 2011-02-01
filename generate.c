@@ -17,12 +17,13 @@
 int main(int argc, char **argv) {
 
     srand((unsigned int) time(0));
-
+	
+    int scale = atoi(argv[2]);
     ga_jpeg *jpeg = ga_read_jpeg(argv[1]);
     int width = jpeg->width;
     int height = jpeg->height;
 
-    setup_display(width, height);
+    setup_display(width * scale, height * scale);
 
     // TODO: make it so the ref image is side-by-side
     display_rgb_pixbuf(jpeg->buffer, width, height, 1);
@@ -45,15 +46,19 @@ int main(int argc, char **argv) {
 
     byte *buffer = (byte*)_mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
 
-    rasterize_vectimg(v, buffer);
-
     int i = 0, iters = 0;
     while (1) {
         iters++;
         if (iters % 2500 == 0) {
-            printf("generation: %d selected: %d fitness: %ld polygons: %d iters: %d\n",
-                    i, selected, prev_fitness,
+            int points = 0;
+            for (int x = 0;x < v->num_polygons;x++) {
+                points += v->polygons[x].num_vertices;
+            }
+
+            printf("generation: %d selected: %d fitness: %ld points %d polygons: %d iters: %d\n",
+                    i, selected, prev_fitness, points,
                     v->num_polygons, iters);
+
             fflush(stdout);
         }
         vectimg *c = clone_vectimg(v);
@@ -67,18 +72,17 @@ int main(int argc, char **argv) {
         rasterize_vectimg(c, buffer);
 
         long fitness = calc_fitness(buffer, ref, bufsz);
-        //printf("fitness: %ld\n",fitness);
         if (fitness < prev_fitness || prev_fitness < 0) {
             prev_fitness = fitness;
             free(v);
             v = c;
+			render_vectimg(c, scale);
             glfwSwapBuffers();
             selected++;
 
         } else {
             free(c);
         }
-
 
         i++;
     }

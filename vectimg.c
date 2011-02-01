@@ -26,11 +26,15 @@ void set_color(polygon *p, byte r, byte g, byte b, byte alpha) {
 void gen_random_polygon(polygon *p, int width, int height) {
     p->num_vertices = 0;
     set_color(p, random_color(), random_color(),
-            random_color(), random_color() /* alpha */);
+              random_color(), random_alpha());
 
-    int num_vertices = random_vertices();
-    for (int j = 0; j < num_vertices; j++) {
-        add_vertex(p, random_width(width), random_height(height));
+    int ax = random_width(width);
+    int ay = random_height(height);
+
+    for (int i = 0; i < MIN_VERTICES; i++) {
+        int x = ga_min(ga_max(0, ax + ga_rand_range(-3,3)),width);
+        int y = ga_min(ga_max(0, ay + ga_rand_range(-3,3)),height);
+        add_vertex(p,x,y);
     }
 }
 
@@ -45,8 +49,7 @@ void add_polygon(vectimg *v) {
 void remove_polygon(vectimg *v) {
     int i;
     int np = v->num_polygons;
-    // TODO: distribution correct?
-    int ridx = ga_rand() % np;
+    int ridx = ga_rand_range(1,np);
 
     if ((np - 1) > MIN_POLYGONS) {
         for (i = ridx; i < np; i++) {
@@ -57,8 +60,13 @@ void remove_polygon(vectimg *v) {
 }
 
 void move_polygon(vectimg *v) {
-    remove_polygon(v);
-    add_polygon(v);
+    int np = v->num_polygons;
+    int from = ga_rand_range(1,np);
+    int to = ga_rand_range(1,np);
+
+    polygon tmp = v->polygons[from];
+    v->polygons[from] = v->polygons[to];
+    v->polygons[to] = tmp;
 }
 
 void add_new_vertex(polygon *p, int width, int height) {
@@ -70,8 +78,7 @@ void add_new_vertex(polygon *p, int width, int height) {
 void remove_vertex(polygon *p) {
     int i;
     int nv = p->num_vertices;
-    // TODO: distribution correct?
-    int ridx = ga_rand() % nv;
+    int ridx = ga_rand_range(1,nv);
 
     if ((nv - 1) > MIN_VERTICES) {
         for (i = ridx; i < nv; i++) {
@@ -114,19 +121,19 @@ void change_color(vectimg *v, polygon *p) {
     }
 
     if (rand() % CHANGE_COLOR_RATE == 1) {
-        p->color[3] = random_color();
+        p->color[3] = random_alpha();
         v->modified = 1;
     }
 }
 
 void change_polygon(vectimg *v, polygon *p) {
 
-    if ((rand() % ADD_VERTEX_RATE) == 1) {
+    if ((ga_rand() % ADD_VERTEX_RATE) == 1) {
         add_new_vertex(p, v->width, v->height);
         v->modified = 1;
     }
 
-    if ((rand() % REMOVE_VERTEX_RATE) == 1) {
+    if ((ga_rand() % REMOVE_VERTEX_RATE) == 1) {
         remove_vertex(p);
         v->modified = 1;
     }
@@ -135,7 +142,7 @@ void change_polygon(vectimg *v, polygon *p) {
 
     int nv = p->num_vertices;
     for (int i = 0; i < nv; i++) {
-        if ((rand() % MOVE_VERTEX_MAX) == 1) {
+        if ((ga_rand() % MOVE_VERTEX_MAX) == 1) {
             p->vertices[i].x = random_width(v->width);
             p->vertices[i].y = random_height(v->height);
             v->modified = 1;
@@ -145,13 +152,13 @@ void change_polygon(vectimg *v, polygon *p) {
         int y = p->vertices[i].y;
 
         // TODO: this could be cleaned up
-        if ((rand() % MOVE_VERTEX_MID) == 1) {
+        if ((ga_rand() % MOVE_VERTEX_MID) == 1) {
             p->vertices[i].x = ga_min(ga_max(0, x + ga_rand_range(-20, 20)), v->width);
             p->vertices[i].y = ga_min(ga_max(0, y + ga_rand_range(-20, 20)), v->height);
             v->modified = 1;
         }
 
-        if ((rand() % MOVE_VERTEX_MIN) == 1) {
+        if ((ga_rand() % MOVE_VERTEX_MIN) == 1) {
             p->vertices[i].x = ga_min(ga_max(0, x + ga_rand_range(-3, 3)), v->width);
             p->vertices[i].y = ga_min(ga_max(0, y + ga_rand_range(-3, 3)), v->height);
             v->modified = 1;
@@ -161,17 +168,17 @@ void change_polygon(vectimg *v, polygon *p) {
 
 void change_image(vectimg *v) {
 
-    if ((rand() % ADD_POLYGON_RATE) == 1) {
+    if ((ga_rand() % ADD_POLYGON_RATE) == 1) {
         add_polygon(v);
         v->modified = 1;
     }
 
-    if ((rand() % REMOVE_POLYGON_RATE) == 1) {
+    if ((ga_rand() % REMOVE_POLYGON_RATE) == 1) {
         remove_polygon(v);
         v->modified = 1;
     }
 
-    if ((rand() % MOVE_POLYGON_RATE) == 1) {
+    if ((ga_rand() % MOVE_POLYGON_RATE) == 1) {
         move_polygon(v);
         v->modified = 1;
     }
