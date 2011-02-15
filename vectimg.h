@@ -22,7 +22,6 @@ typedef struct vectimg {
     int height;
 } vectimg;
 
-void render_vectimg(vectimg *v);
 void print_vectimg(char *name, vectimg *v);
 vectimg *gen_random_vectimg(int num_polygons, int width, int height);
 void add_vertex(polygon *p, int x, int y);

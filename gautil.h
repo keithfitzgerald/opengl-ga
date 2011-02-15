@@ -6,13 +6,12 @@
 #define byte uint8_t
 
 #define MIN_POLYGONS 1
-#define MAX_POLYGONS 50
-//#define MAX_POLYGONS 100
+//#define MAX_POLYGONS 50
+#define MAX_POLYGONS 100
 
 #define MIN_VERTICES 3
 #define MAX_VERTICES 10
 
-/*
 #define ADD_POLYGON_RATE 35
 #define REMOVE_POLYGON_RATE 75
 #define MOVE_POLYGON_RATE 35
@@ -26,9 +25,9 @@
 #define MOVE_VERTEX_MIN 75
 
 #define CHANGE_COLOR_RATE 75
-*/
 
 /* defaults from evolisa */
+/*
 #define ADD_POLYGON_RATE 700
 #define REMOVE_POLYGON_RATE 1500
 #define MOVE_POLYGON_RATE 700
@@ -42,6 +41,7 @@
 #define MOVE_VERTEX_MIN 1500
 
 #define CHANGE_COLOR_RATE 1500
+*/
 
 long calc_fitness(byte *src, byte *ref, int bufsz);
 

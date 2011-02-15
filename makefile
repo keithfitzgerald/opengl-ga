@@ -1,7 +1,14 @@
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+CCLINK=-framework Cocoa -ljpeg -lglfw -framework OpenGL -framework OpenCL
+else
+CCLINK=-lGL -ljpeg -lglfw
+endif
+
 CC=gcc
 CFLAGS=-Wall -std=c99 -msse2
-CCLINK=-lGL -ljpeg -lglfw
-SOURCES=opengl/display.c gautil.c generate.c jpeg.c vectimg.c
+SOURCES=opengl/display.c opencl.c gautil.c generate.c jpeg.c vectimg.c
 OUTPUT = opengl-ga
 
 all: $(OUTPUT)
