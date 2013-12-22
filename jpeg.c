@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <jpeglib.h>
 #include "jpeg.h"
+#include "jpeg/jpeglib.h"
 
 ga_jpeg *ga_read_jpeg(char *filename) {
 

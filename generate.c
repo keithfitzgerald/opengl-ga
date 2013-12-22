@@ -6,8 +6,8 @@
 #else
   #include <xmmintrin.h>
 #endif
-#include "GL/glfw.h"
-#include "opengl/display.h"
+#include <glfw/glfw3.h>
+#include "display.h"
 #include "gautil.h"
 #include "jpeg.h"
 #include "vectimg.h"
@@ -15,20 +15,25 @@
 #define BUF_ALIGN_WIDTH 16
 
 int main(int argc, char **argv) {
+  
+    if (argc != 3) {
+        printf("usage: opengl-ga [image.jpg] [scale (int)]\n");
+        return EXIT_FAILURE;
+    }
 
     srand((unsigned int) time(0));
 	
-    int scale = atoi(argv[2]);
+    int scale = 1; // atoi(argv[2]);
     ga_jpeg *jpeg = ga_read_jpeg(argv[1]);
     int width = jpeg->width;
     int height = jpeg->height;
-
-    setup_display(width * scale, height * scale);
+  
+    GLFWwindow *window = setup_display((width * scale) * 2, height * scale);
 
     // TODO: make it so the ref image is side-by-side
-    display_rgb_pixbuf(jpeg->buffer, width, height, 1);
+    display_rgb_pixbuf(jpeg->buffer, width, height, 0, 0, 1);
 
-    ga_free_jpeg(jpeg);
+    //ga_free_jpeg(jpeg);
 
     // align buffer to BUF_ALIGN_WIDTH
     int numpix = (width * height * 3);
@@ -76,8 +81,9 @@ int main(int argc, char **argv) {
             prev_fitness = fitness;
             free(v);
             v = c;
-			render_vectimg(c, scale);
-            glfwSwapBuffers();
+            render_vectimg(c, scale);
+            display_rgb_pixbuf(jpeg->buffer, width, height, width, 0, 1);
+            glfwSwapBuffers(window);
             selected++;
 
         } else {
@@ -87,6 +93,8 @@ int main(int argc, char **argv) {
         i++;
     }
     printf("\n");
+
+    ga_free_jpeg(jpeg);
 
     free(v);
     _mm_free(buffer);
