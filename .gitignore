@@ -5,4 +5,14 @@ nbproject/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-
+jpeg/.libs/
+jpeg/*.lo
+jpeg/*.o
+jpeg/config.log
+Makefile
+jpeg/cjpeg
+jpeg/djpeg
+jpeg/jpegtran
+jpeg/libjpeg.la
+jpeg/rdjpgcom
+jpeg/wrjpgcom

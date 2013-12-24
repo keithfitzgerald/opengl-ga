@@ -1,13 +1,27 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include <glfw/glfw3.h>
 #include "display.h"
 #include "gautil.h"
 #include "jpeg.h"
 
+static void error_callback(int error, const char* description) {
+    fputs(description, stderr);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS) {
+      if (key == GLFW_KEY_ESCAPE || key == 'Q') {
+          glfwSetWindowShouldClose(window, GL_TRUE);
+      }
+    }
+}
 
 GLFWwindow* setup_display(int width, int height) {
     int vPort[4];
+
+    glfwSetErrorCallback(error_callback);
 
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW\n");
@@ -23,6 +37,15 @@ GLFWwindow* setup_display(int width, int height) {
     }
 
     glfwMakeContextCurrent(window);
+ 
+    glfwSetKeyCallback(window, key_callback);
+  
+    GLuint font;
+    glGenTextures(1, &font);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, font);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    load_png_texture("font.png");
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -59,7 +82,7 @@ void render_vectimg(vectimg *v, int scale) {
 
         for (int j = 0; j < p.num_vertices; j++) {
             vertex v = p.vertices[j];
-            glVertex2i(v.x * scale, v.y * scale);
+            glVertex2i(v.x * scale, v.y * scale + HEIGHT_OFFSET);
         }
 
         glEnd();
@@ -67,7 +90,7 @@ void render_vectimg(vectimg *v, int scale) {
 }
 
 void read_pixels(byte *buffer, int width, int height) {
-    glReadPixels(0, 0, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    glReadPixels(0, HEIGHT_OFFSET, width - 1, height - 1, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 }
 
 void rasterize_vectimg(vectimg *v, byte *buffer) {
@@ -75,14 +98,13 @@ void rasterize_vectimg(vectimg *v, byte *buffer) {
     read_pixels(buffer, v->width, v->height);
 }
 
-void display_rgb_pixbuf(byte *buffer, int width, int height, int offset_x, int offset_y, unsigned char inverted) {
+void display_rgb_pixbuf(byte *buffer, int width, int height, 
+                        int offset_x, int offset_y, unsigned char inverted) {
     int base = inverted ? height - 1 : 0;
     int stride = width * 3;
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < stride; x += 3) {
             int i = ((base - y) * stride) + x;
-            //printf("out pixel [%d,%d]: R=%d,G=%d,B=%d\n",x/3,y,buffer[i],buffer[i+1],buffer[i+2]);
-            //fflush(stdout);
             glBegin(GL_POINTS);
             glColor3ub(buffer[i], buffer[i + 1], buffer[i + 2]);
             glVertex2i((x / 3) + offset_x, y + offset_y);
@@ -90,4 +112,3 @@ void display_rgb_pixbuf(byte *buffer, int width, int height, int offset_x, int o
         }
     }
 }
-

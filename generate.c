@@ -11,6 +11,7 @@
 #include "gautil.h"
 #include "jpeg.h"
 #include "vectimg.h"
+#include "gltext.h"
 
 #define BUF_ALIGN_WIDTH 16
 
@@ -22,18 +23,26 @@ int main(int argc, char **argv) {
     }
 
     srand((unsigned int) time(0));
-	
+
     int scale = 1; // atoi(argv[2]);
     ga_jpeg *jpeg = ga_read_jpeg(argv[1]);
     int width = jpeg->width;
     int height = jpeg->height;
   
-    GLFWwindow *window = setup_display((width * scale) * 2, height * scale);
+    GLFWwindow *window = setup_display((width * scale) * 2, (height * scale) + HEIGHT_OFFSET);
 
-    // TODO: make it so the ref image is side-by-side
-    display_rgb_pixbuf(jpeg->buffer, width, height, 0, 0, 1);
+    Attrib text_attrib = {0};
+    GLuint program;
 
-    //ga_free_jpeg(jpeg);
+    program = load_program(
+        "shaders/text_vertex.glsl", "shaders/text_fragment.glsl");
+    text_attrib.program = program;
+    text_attrib.position = glGetAttribLocation(program, "position");
+    text_attrib.uv = glGetAttribLocation(program, "uv");
+    text_attrib.matrix = glGetUniformLocation(program, "matrix");
+    text_attrib.sampler = glGetUniformLocation(program, "sampler");
+
+    display_rgb_pixbuf(jpeg->buffer, width, height, 0, HEIGHT_OFFSET, 1);
 
     // align buffer to BUF_ALIGN_WIDTH
     int numpix = (width * height * 3);
@@ -51,54 +60,47 @@ int main(int argc, char **argv) {
 
     byte *buffer = (byte*)_mm_malloc(sizeof (byte) * bufsz, BUF_ALIGN_WIDTH);
 
-    int i = 0, iters = 0;
-    while (1) {
-        iters++;
-        if (iters % 2500 == 0) {
-            int points = 0;
-            for (int x = 0;x < v->num_polygons;x++) {
-                points += v->polygons[x].num_vertices;
-            }
+    int generation = 0;
+    while (!glfwWindowShouldClose(window)) {
+        char line1[64], line2[64], line3[64];
 
-            printf("generation: %d selected: %d fitness: %ld points %d polygons: %d iters: %d\n",
-                    i, selected, prev_fitness, points,
-                    v->num_polygons, iters);
-
-            fflush(stdout);
-        }
+        sprintf(line1, "generation: %d", generation);
+        sprintf(line2, "fitness: %ld", prev_fitness);
+        sprintf(line3, "polygons: %d", v->num_polygons);
+ 
         vectimg *c = clone_vectimg(v);
         change_image(c);
 
-        if (!c->modified) {
-            free(c);
-            continue;
-        }
-
         rasterize_vectimg(c, buffer);
-
         long fitness = calc_fitness(buffer, ref, bufsz);
+
         if (fitness < prev_fitness || prev_fitness < 0) {
             prev_fitness = fitness;
             free(v);
             v = c;
-            render_vectimg(c, scale);
-            display_rgb_pixbuf(jpeg->buffer, width, height, width, 0, 1);
-            glfwSwapBuffers(window);
-            selected++;
+          
+            render_text(&text_attrib, 0, 10, 20, 12, line3, width, height);
+            render_text(&text_attrib, 0, 10, 40, 12, line2, width, height);
+            render_text(&text_attrib, 0, 10, 60, 12, line1, width, height);
+            display_rgb_pixbuf(jpeg->buffer, width, height, width, HEIGHT_OFFSET, 1);
 
+            glfwSwapBuffers(window);
         } else {
             free(c);
         }
 
-        i++;
-    }
-    printf("\n");
+        glfwPollEvents();
 
-    ga_free_jpeg(jpeg);
+        generation++;
+    }
 
     free(v);
+
     _mm_free(buffer);
     _mm_free(ref);
+ 
+    ga_free_jpeg(jpeg);
+    glfwDestroyWindow(window);
     glfwTerminate();
 
     exit(EXIT_SUCCESS);

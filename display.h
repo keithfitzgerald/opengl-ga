@@ -5,6 +5,10 @@
 #include "vectimg.h"
 #include "gautil.h"
 
+#define HEIGHT_OFFSET 150 
+
+void load_png_texture(const char *file_name);
+
 GLFWwindow* setup_display(int width, int height);
 void rasterize_vectimg(vectimg *v, byte *buffer);
 
